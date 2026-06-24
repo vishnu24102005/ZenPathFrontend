@@ -30,7 +30,6 @@ function Login() {
       } else {
         alert(data.message || "Invalid credentials");
       }
-
     } catch (err) {
       alert("Server error");
     }
