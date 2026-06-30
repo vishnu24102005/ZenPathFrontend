@@ -33,7 +33,7 @@ function Login() {
         alert(data.message || "Invalid credentials");
       }
     } catch (err) {
-      alert("Server error");
+      alert("Server loding wait for 60s and Try again");
     }
     finally{
       setLoading(false);
