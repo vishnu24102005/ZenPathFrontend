@@ -7,6 +7,7 @@ function Login() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const API_URL = import.meta.env.VITE_API_URL;
 
@@ -14,6 +15,7 @@ function Login() {
     e.preventDefault();
 
     try {
+      setLoading(true);
       const response = await fetch(`${API_URL}/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -32,6 +34,9 @@ function Login() {
       }
     } catch (err) {
       alert("Server error");
+    }
+    finally{
+      setLoading(false);
     }
   };
 
@@ -56,7 +61,17 @@ function Login() {
           onChange={(e) => setPassword(e.target.value)}
         />
 
-        <button type="submit">Login</button>
+        {loading && (
+            <div className="loading">
+              <div className="spinner"></div>
+              <p>🔄 Waking up the server...</p>
+              <p>This may take up to 60 seconds on the first request.</p>
+            </div>
+          )}
+
+        <button type="submit" disabled={loading}>
+            {loading ? "Please Wait..." : "Login"}
+          </button>
       </form>
 
       <p>
