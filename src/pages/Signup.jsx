@@ -59,7 +59,7 @@ function Signup() {
           alert(data.message);
         }
       } catch (err) {
-        alert("Server error");
+        alert("Server loding wait for 60s");
       } finally {
         setLoading(false);
       }
