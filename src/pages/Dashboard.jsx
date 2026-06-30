@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useEffect } from "react";
 import "../App.css";
 import { useNavigate } from "react-router-dom";
 import {
@@ -8,7 +9,7 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
-  CartesianGrid
+  CartesianGrid,
 } from "recharts";
 function Dashboard() {
   const [activeTab, setActiveTab] = useState("status");
@@ -111,6 +112,7 @@ function Dashboard() {
     if (level === "High") return "red";
     return "gray";
   };
+
   const fetchHistory = async () => {
     try {
       const response = await fetch(`${API_URL}/history?email=${userEmail}`);
@@ -126,50 +128,88 @@ function Dashboard() {
       console.error(error);
     }
   };
-  const stressData = history.map(item => ({
-  ...item,
-  stressValue:
-    item.prediction === "Low"
-      ? 1
-      : item.prediction === "Medium"
-      ? 2
-      : 3
-}));
+  const saveProfile = async () => {
+    try {
+      const response = await fetch(`${API_URL}/save-profile`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: userEmail,
+          name,
+          age: Number(age),
+          photo: profilePhoto,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        alert("Profile saved successfully.");
+      } else {
+        alert(data.message);
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Server Error");
+    }
+  };
+
+  const fetchProfile = async () => {
+    try {
+      const response = await fetch(`${API_URL}/profile?email=${userEmail}`);
+
+      const data = await response.json();
+
+      if (data.success) {
+        setName(data.profile.name || "");
+        setAge(data.profile.age || "");
+        setProfilePhoto(data.profile.photo || "");
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+  useEffect(() => {
+    if (userEmail) {
+      fetchProfile();
+    }
+  }, []);
+  const stressData = history.map((item) => ({
+    ...item,
+    stressValue:
+      item.prediction === "Low" ? 1 : item.prediction === "Medium" ? 2 : 3,
+  }));
   const GraphCard = ({ title, dataKey }) => (
-  <div className="graph-card">
-    <h3>{title}</h3>
+    <div className="graph-card">
+      <h3>{title}</h3>
 
-    <ResponsiveContainer width="100%" height={300}>
-      <LineChart
-        data={dataKey === "stressValue" ? stressData : history}
-      >
-        <CartesianGrid strokeDasharray="3 3" />
+      <ResponsiveContainer width="100%" height={300}>
+        <LineChart data={dataKey === "stressValue" ? stressData : history}>
+          <CartesianGrid strokeDasharray="3 3" />
 
-        <XAxis
-          dataKey="date"
-          tickFormatter={(value) =>
-            new Date(value).toLocaleDateString()
-          }
-        />
+          <XAxis
+            dataKey="date"
+            tickFormatter={(value) => new Date(value).toLocaleDateString()}
+          />
 
-        <YAxis />
+          <YAxis />
 
-        <Tooltip
-          labelFormatter={(value) =>
-            new Date(value).toLocaleString()
-          }
-        />
+          <Tooltip
+            labelFormatter={(value) => new Date(value).toLocaleString()}
+          />
 
-        <Line
-          type="monotone"
-          dataKey={dataKey}
-          stroke="#4f46e5"
-          strokeWidth={3}
-        />
-      </LineChart>
-    </ResponsiveContainer>
-  </div>
-);
+          <Line
+            type="monotone"
+            dataKey={dataKey}
+            stroke="#4f46e5"
+            strokeWidth={3}
+          />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  );
 
   return (
     <div className="dashboard-container">
@@ -336,28 +376,24 @@ function Dashboard() {
           </div>
         )}
         {activeTab === "Visualization" && (
-  <div className="visualization-container">
+          <div className="visualization-container">
+            <h1>📈 Stress Analytics Dashboard</h1>
 
-    <h1>📈 Stress Analytics Dashboard</h1>
+            <div className="graph-grid">
+              <GraphCard title="Sleep Duration Trend" dataKey="sleep" />
+              <GraphCard title="Work Hours Trend" dataKey="work" />
 
-    <div className="graph-grid">
+              <GraphCard title="Mood Level Trend" dataKey="mood" />
+              <GraphCard title="Screen Time Trend" dataKey="screen" />
 
-      <GraphCard title="Sleep Duration Trend" dataKey="sleep" />
-      <GraphCard title="Work Hours Trend" dataKey="work" />
+              <GraphCard title="Physical Activity Trend" dataKey="activity" />
+              <GraphCard title="Heart Rate Trend" dataKey="heart" />
 
-      <GraphCard title="Mood Level Trend" dataKey="mood" />
-      <GraphCard title="Screen Time Trend" dataKey="screen" />
-
-      <GraphCard title="Physical Activity Trend" dataKey="activity" />
-      <GraphCard title="Heart Rate Trend" dataKey="heart" />
-
-      <GraphCard title="SpO₂ Trend" dataKey="spo2" />
-      <GraphCard title="Stress Trend" dataKey="stressValue" />
-
-    </div>
-
-  </div>
-)}
+              <GraphCard title="SpO₂ Trend" dataKey="spo2" />
+              <GraphCard title="Stress Trend" dataKey="stressValue" />
+            </div>
+          </div>
+        )}
 
         {activeTab === "profile" && (
           <div className="profile-container">
@@ -368,7 +404,11 @@ function Dashboard() {
             <div className="profile-content">
               <div className="photo-section">
                 <img
-                  src={profilePhoto || "https://via.placeholder.com/150"}
+                  src={
+                    profilePhoto
+                      ? profilePhoto
+                      : "https://via.placeholder.com/150"
+                  }
                   alt="Profile"
                   className="profile-photo"
                 />
@@ -409,7 +449,9 @@ function Dashboard() {
                   />
                 </div>
 
-                <button className="save-btn">Save Profile</button>
+                <button className="save-btn" onClick={saveProfile}>
+                  Save Profile
+                </button>
               </div>
             </div>
           </div>
